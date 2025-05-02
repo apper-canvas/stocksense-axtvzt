@@ -1,5 +1,6 @@
 import * as Icons from 'lucide-react';
   
 export default function getIcon(iconName) {
-  return Icons[iconName] || Icons.Smile;
+  const IconComponent = Icons[iconName] || Icons.Smile;
+  return (props) => <IconComponent {...props} />;
 };
