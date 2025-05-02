@@ -27,9 +27,6 @@ function App() {
     setIsDarkMode(prev => !prev);
   };
   
-  const MoonIcon = getIcon('Moon');
-  const SunIcon = getIcon('Sun');
-  
   return (
     <>
       <header className="sticky top-0 z-10 bg-white dark:bg-surface-800 shadow-sm">
@@ -51,9 +48,9 @@ function App() {
             aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
           >
             {isDarkMode ? (
-              <SunIcon className="w-5 h-5 text-yellow-400" />
+              getIcon('Sun')({ className: "w-5 h-5 text-yellow-400" })
             ) : (
-              <MoonIcon className="w-5 h-5 text-surface-600" />
+              getIcon('Moon')({ className: "w-5 h-5 text-surface-600" })
             )}
           </button>
         </div>

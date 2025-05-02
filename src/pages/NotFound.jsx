@@ -4,8 +4,6 @@ import getIcon from '../utils/iconUtils';
 
 const NotFound = () => {
   const navigate = useNavigate();
-  const AlertCircleIcon = getIcon('AlertCircle');
-  const HomeIcon = getIcon('Home');
 
   return (
     <div className="min-h-[70vh] container mx-auto px-4 flex flex-col items-center justify-center text-center">
@@ -15,7 +13,7 @@ const NotFound = () => {
         transition={{ duration: 0.5 }}
         className="mb-8"
       >
-        <AlertCircleIcon className="w-20 h-20 text-primary mx-auto mb-6" />
+        {getIcon('AlertCircle')({ className: "w-20 h-20 text-primary mx-auto mb-6" })}
         <h1 className="text-4xl md:text-5xl font-bold mb-4">404</h1>
         <h2 className="text-2xl md:text-3xl font-semibold mb-2">Page Not Found</h2>
         <p className="text-surface-600 dark:text-surface-400 max-w-md mx-auto">
@@ -30,7 +28,7 @@ const NotFound = () => {
         className="btn btn-primary flex items-center gap-2 px-6 py-3"
         onClick={() => navigate('/')}
       >
-        <HomeIcon className="w-5 h-5" />
+        {getIcon('Home')({ className: "w-5 h-5" })}
         <span>Back to Dashboard</span>
       </motion.button>
     </div>
