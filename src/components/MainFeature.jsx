@@ -102,27 +102,26 @@ const MainFeature = ({ onAddProduct }) => {
     setFormStep(1);
   };
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (formStep === 2 && validateStep2()) {
       setIsSubmitting(true);
       
-      // Create a new product object with parsed numeric values
-      const newProduct = {
-        ...formData,
-        quantity: parseInt(formData.quantity),
-        minQuantity: parseInt(formData.minQuantity),
-        unitCost: parseFloat(formData.unitCost),
-        sellingPrice: parseFloat(formData.sellingPrice),
-        createdAt: new Date().toISOString()
-      };
-      
-      // Simulate API call
-      setTimeout(() => {
-        onAddProduct(newProduct);
+      try {
+        // Create a new product object with parsed numeric values
+        const newProduct = {
+          ...formData,
+          quantity: parseInt(formData.quantity),
+          minQuantity: parseInt(formData.minQuantity),
+          unitCost: parseFloat(formData.unitCost),
+          sellingPrice: parseFloat(formData.sellingPrice)
+        };
         
-        // Reset form
+        // Call the parent handler to create the product in the database
+        await onAddProduct(newProduct);
+        
+        // Reset form after successful submission
         setFormData({
           name: '',
           sku: '',
@@ -136,9 +135,13 @@ const MainFeature = ({ onAddProduct }) => {
         });
         
         setFormStep(1);
-        setIsSubmitting(false);
         setShowPreview(false);
-      }, 1000);
+      } catch (error) {
+        console.error('Error adding product:', error);
+        toast.error('Failed to add product. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
   

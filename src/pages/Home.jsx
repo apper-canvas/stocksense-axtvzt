@@ -1,19 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import MainFeature from '../components/MainFeature';
 import getIcon from '../utils/iconUtils';
+import { productService } from '../services/productService';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [inventoryStats, setInventoryStats] = useState({
-    totalItems: 124,
-    lowStock: 12,
-    outOfStock: 5,
-    recentlyAdded: 8
+    totalItems: 0,
+    lowStock: 0,
+    outOfStock: 0,
+    recentlyAdded: 0
   });
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
+  // Fetch products and stats on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Get product stats for the dashboard
+        const stats = await productService.getProductStats();
+        setInventoryStats(stats);
+        
+        // Get all products
+        const { data } = await productService.getProducts();
+        setProducts(data);
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error loading data:', err);
+        setError('Failed to load inventory data. Please try again later.');
+        setLoading(false);
+        toast.error('Failed to load inventory data');
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Filter products based on search query
+  const filteredItems = products.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Quick access cards with inventory highlights
   const quickAccessItems = [
     {
@@ -46,22 +83,6 @@ const Home = () => {
     }
   ];
 
-  // Sample inventory items to demonstrate the list
-  const sampleInventoryItems = [
-    { id: 1, name: "Wireless Headphones", sku: "WH-001", category: "Electronics", quantity: 24, minQuantity: 10, status: "In Stock" },
-    { id: 2, name: "Organic Green Tea", sku: "GT-002", category: "Food & Beverage", quantity: 8, minQuantity: 15, status: "Low Stock" },
-    { id: 3, name: "Ergonomic Office Chair", sku: "OC-003", category: "Furniture", quantity: 0, minQuantity: 5, status: "Out of Stock" },
-    { id: 4, name: "Smartphone Case", sku: "SC-004", category: "Accessories", quantity: 56, minQuantity: 20, status: "In Stock" },
-    { id: 5, name: "Yoga Mat", sku: "YM-005", category: "Sports", quantity: 12, minQuantity: 10, status: "In Stock" },
-    { id: 6, name: "LED Desk Lamp", sku: "DL-006", category: "Lighting", quantity: 7, minQuantity: 8, status: "Low Stock" }
-  ];
-
-  const filteredItems = sampleInventoryItems.filter(item => 
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -91,15 +112,26 @@ const Home = () => {
     setSearchQuery(e.target.value);
   };
 
-  const handleAddProduct = (newProduct) => {
-    // In a real app, this would add the product to the state or backend
-    // For this demo, we just show a success toast
-    toast.success(`Product "${newProduct.name}" added successfully!`);
-    setInventoryStats(prev => ({
-      ...prev,
-      totalItems: prev.totalItems + 1,
-      recentlyAdded: prev.recentlyAdded + 1
-    }));
+  const handleAddProduct = async (newProduct) => {
+    try {
+      // Create the product in the database
+      const createdProduct = await productService.createProduct(newProduct);
+      
+      // Add the new product to the local state
+      setProducts(prev => [createdProduct, ...prev]);
+      
+      // Update inventory stats
+      setInventoryStats(prev => ({
+        ...prev,
+        totalItems: prev.totalItems + 1,
+        recentlyAdded: prev.recentlyAdded + 1
+      }));
+      
+      toast.success(`Product "${newProduct.name}" added successfully!`);
+    } catch (error) {
+      console.error('Error adding product:', error);
+      toast.error('Failed to add product. Please try again.');
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -114,6 +146,39 @@ const Home = () => {
         return <span className="badge bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">{status}</span>;
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
+          <p className="text-surface-600 dark:text-surface-400">Loading inventory data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="text-red-500 mb-4">
+            {getIcon('AlertCircle')({ className: "w-12 h-12" })}
+          </div>
+          <p className="text-red-500 font-medium mb-2">Error Loading Data</p>
+          <p className="text-surface-600 dark:text-surface-400 mb-4">{error}</p>
+          <button 
+            className="btn btn-primary"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4">
@@ -290,7 +355,7 @@ const Home = () => {
 
         {activeTab === 'products' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sampleInventoryItems.map((item) => (
+            {products.map((item) => (
               <div key={item.id} className="card flex flex-col hover:shadow-lg transition-shadow duration-200">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-lg font-semibold">{item.name}</h3>

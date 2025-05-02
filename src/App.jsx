@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
-import { motion } from 'framer-motion';
-import getIcon from './utils/iconUtils';
+import { ToastContainer } from 'react-toastify';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
+import Navbar from './components/Navbar';
 
 // Pages
 import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -28,37 +32,24 @@ function App() {
   };
   
   return (
-    <>
-      <header className="sticky top-0 z-10 bg-white dark:bg-surface-800 shadow-sm">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <motion.div 
-              initial={{ rotate: -10 }} 
-              animate={{ rotate: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-accent"
-            >
-              {getIcon('PackageOpen')({ className: "w-7 h-7" })}
-            </motion.div>
-            <h1 className="text-lg md:text-xl font-bold text-primary">StockSense</h1>
-          </div>
-          <button
-            onClick={toggleDarkMode}
-            className="p-2 rounded-full bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors duration-200"
-            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {isDarkMode ? (
-              getIcon('Sun')({ className: "w-5 h-5 text-yellow-400" })
-            ) : (
-              getIcon('Moon')({ className: "w-5 h-5 text-surface-600" })
-            )}
-          </button>
-        </div>
-      </header>
+    <AuthProvider>
+      <Navbar isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
       
       <main className="min-h-screen pt-4 pb-12">
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* Public routes - accessible only when NOT authenticated */}
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+          </Route>
+          
+          {/* Protected routes - require authentication */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Home />} />
+            {/* Add other protected routes here */}
+          </Route>
+          
+          {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -82,7 +73,7 @@ function App() {
         theme={isDarkMode ? "dark" : "light"}
         toastClassName="rounded-xl shadow-soft"
       />
-    </>
+    </AuthProvider>
   );
 }
 
