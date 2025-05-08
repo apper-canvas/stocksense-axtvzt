@@ -11,6 +11,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import NotFound from './pages/NotFound';
+import Callback from './pages/CallBack';
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -41,6 +42,7 @@ function App() {
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/callback" element={<Callback />} />
           </Route>
           
           {/* Protected routes - require authentication */}

@@ -9,11 +9,11 @@ export function AuthProvider({ children }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isInitialized, setIsInitialized] = useState(false);
-  
+
   // Initialize ApperUI once when the app loads
   useEffect(() => {
     dispatch(setLoading(true));
-    
+
     const initializeAuth = async () => {
       try {
         const { ApperClient, ApperUI } = window.ApperSDK;
@@ -21,28 +21,34 @@ export function AuthProvider({ children }) {
           apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
           apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
         });
-        
+
         // Initialize but don't show login yet
         ApperUI.setup(client, {
           target: '#authentication',
           clientId: import.meta.env.VITE_APPER_PROJECT_ID,
           view: 'both',
-          onSuccess: function(user) {
+          onSuccess: function (user) {
+            let currentPath = window.location.pathname + window.location.search;
             // Store user data in Redux store
             if (user && user.isAuthenticated) {
               dispatch(setUser(user));
               navigate('/');
             } else {
               dispatch(clearUser());
-              navigate('/login');
+              if (currentPath) {
+                navigate(currentPath);
+              }
+              else {
+                navigate('/login');
+              }
             }
           },
-          onError: function(error) {
+          onError: function (error) {
             console.error("Authentication failed:", error);
             dispatch(clearUser());
           }
         });
-        
+
         setIsInitialized(true);
         dispatch(setLoading(false));
       } catch (error) {
@@ -50,10 +56,10 @@ export function AuthProvider({ children }) {
         dispatch(setLoading(false));
       }
     };
-    
+
     initializeAuth();
   }, [dispatch, navigate]);
-  
+
   // Authentication methods to share via context
   const authMethods = {
     isInitialized,
@@ -80,7 +86,7 @@ export function AuthProvider({ children }) {
       }
     }
   };
-  
+
   return (
     <AuthContext.Provider value={authMethods}>
       {children}
